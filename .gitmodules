@@ -13,3 +13,6 @@
 [submodule "hdbpp-viewer"]
 	path = hdbpp-viewer
 	url = https://github.com/tango-controls/hdbpp-viewer.git
+[submodule "libhdbpp"]
+	path = libhdbpp
+	url = https://github.com/tango-controls-hdbpp/libhdbpp.git
