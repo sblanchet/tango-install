@@ -14,27 +14,24 @@ TANGO_VERSION:=tango-9.2.5a
 TANGO_DIR:=/opt/tango
 TANGO_HOST:=127.0.0.1:10000
 
-
-# Download URLs
-TANGO_GITHUB:=https://github.com/tango-controls
-
 TANGO_SRC_URL:=ftp://ftp.esrf.eu/pub/cs/tango/${TANGO_VERSION}.tar.gz
-HDBPP_CONFIGURATOR_URL=https://bintray.com/tango-controls/maven/download_file?file_path=org%2Ftango%2Fhdb%2Fhdbpp-configurator%2F2.2%2Fhdbpp-configurator-2.2.jar
+
+# Release tag for HDB++ mysql backend
+HDBPP_MYSQL_TAG:=tags/v1.1.0
+
+# Release tag for HDB++ Configuration Manager
+HDBPP_CM_TAG:=tags/v1.0.0
+
+# Release tag for HDB++ Event Subscriber
+HDBPP_ES_TAG:=tags/v1.0.1
+
+# Release tag for HDB++ Configurator
+HDBPP_CONFIGURATOR_TAG:=tags/hdbpp-configurator-3.5
+
+# Release tag for HDB++ Viewer (
+HDBPP_VIEWER_TAG:=70d61cc38d0e844b196fecdb92db65fdf22f222f
 
 
-# Git repository for HDB++ mysql backend
-HDBPP_MYSQL_URL:=${TANGO_GITHUB}/libhdbpp-mysql.git
-# Git repository for HDB++ Configuration manager
-HDBPP_CM_URL:=${TANGO_GITHUB}/hdbpp-cm.git
-# Git repository for HDB++ Event Subscriber
-HDBPP_ES_URL:=${TANGO_GITHUB}/hdbpp-es.git
-# Git repository for HDB++ Configurator GUI
-HDBPP_CONF_GUI_URL:=${TANGO_GITHUB}/hdbpp-configurator.git
-# Git repository for HDB++ Viewer
-HDBPP_VIEWER_URL:=${TANGO_GITHUB}/hdbpp-viewer.git
-
-# Git repository for TANGO
-TANGO_URL:=${TANGO_GITHUB}/TangoSourceDistribution.git
 
 
 ################ END OF USER SETTINGS SECTION
@@ -43,15 +40,6 @@ TANGO_URL:=${TANGO_GITHUB}/TangoSourceDistribution.git
 
 PATH:=/sbin:/usr/sbin:/usr/bin:/bin:${TANGO_DIR}/bin
 
-# Local git repo after cloning remote git repositories
-HDBPP_MYSQL_SRC:=libhdbpp-mysql
-HDBPP_CM_SRC:=hdbpp-cm
-HDBPP_ES_SRC:=hdbpp-es
-HDBPP_CONF_GUI_SRC:=hdbpp-configurator
-HDBPP_VIEWER_SRC:=hdbpp-viewer
-HDBPP_CONF_JAR=hdbpp-configurator.jar
-TANGO_SRC=tango
-
 # default target
 default: help
 
@@ -59,6 +47,7 @@ default: help
 .PHONY: \
     get_sources     \
     help            \
+    install_prereq \
     install_tango   \
     install_itango  \
     install_hdbpp   \
@@ -67,42 +56,34 @@ default: help
 
 
 
+install_prereq:
+# install debian prerequesites
+	apt-get -q update
+	apt-get -yq install git wget cmake make g++
 
-get_sources:
-	# Download sources without compiling
-	# if the apt-get commands fail, run 'apt-get -q update' and try again
-	apt-get -yq install git wget
+# install prerequesites to compile Tango
+	apt-get -yq install automake libtool \
+            libmariadb-dev libmariadbclient-dev-compat mariadb-server \
+            libcos4-dev libomniorb4-dev libzmq3-dev omniidl omniorb openjdk-8-jdk \
+            zlib1g-dev \
+            maven      \
+
 	@echo
 
-
-	# Download Tango source code
-#	Git repository for Tango does not compile. Download .tar.gz from ftp.esrf.fr instead
-#	[ -d ${TANGO_SRC} ] || git clone --recursive ${TANGO_URL} ${TANGO_SRC}
-#	ln -sf ${TANGO_SRC} ${TANGO_VERSION}
-	[ -e ${TANGO_VERSION}.tar.gz ] || wget -q ftp://ftp.esrf.eu/pub/cs/tango/${TANGO_VERSION}.tar.gz -O ${TANGO_VERSION}.tar.gz
-	@echo
-
-
-	# Download hdbpp-configurator
-#	Git respository for hdbpp-configurator does not compile yet. Download precompiled .jar instead
-#	[ -d ${HDBPP_CONF_GUI_SRC} ] || git clone --recursive ${HDBPP_CONF_GUI_URL} ${HDBPP_CONF_GUI_SRC}
-#	@echo
-
-#       A precompiled .jar is available on this webpage, but I do not know how to start it
-#       http://www.tango-controls.org/community/project-docs/hdbplusplus/hdbplusplus-doc/configuration-gui/
-#	# Download JAR file for hdbpp-configurator GUI
-#	[ -e ${HDBPP_CONF_JAR} ] || wget -q ${HDBPP_CONFIGURATOR_URL} -O ${HDBPP_CONF_JAR}
-#	@echo
-
+	# start mariadbserver, 'root' can login with 'mysql' without password
+	systemctl enable mariadb
+	systemctl start mariadb
 
 
 
 help:
 	@echo "Automatic TANGO/HDB++ installation"
 	@echo
+	@echo "make install_prereq: install prerequesites"
 	@echo "make get_sources   : download source code without compiling"
 	@echo "make help          : display this help message"
 	@echo "make install_tango : install TANGO"
+	@echo "make install_libhdbpp : install LibHDB++"
 	@echo "make install_hdbpp : install HDB++"
 	@echo "make install       : install TANGO and HDB++"
 	@echo "make run           : run Tango and its applications"
@@ -113,52 +94,78 @@ install: install_tango install_itango install_hdbpp
 	make run
 
 
+install_libhdbpp:
+	mkdir -p libhdbpp/build
+	cd libhdbpp/build && cmake ..                       \
+            -DCMAKE_INSTALL_PREFIX=${TANGO_DIR}             \
+            -DCMAKE_INCLUDE_PATH=${TANGO_DIR}/include/tango \
+            -DHDBPP_DEV_INSTALL=ON                          \
 
-install_hdbpp: get_sources
-	# install prerequesites to compile hdbpp programs
-	apt-get -yq install maven
+	make -C libhdbpp/build
+	make -C libhdbpp/build install
 
+install_hdbpp: get_sources  install_libhdbpp
 	# Compile HDB++ MySQL backend
-	export TANGO_DIR=${TANGO_DIR} && cd ${HDBPP_MYSQL_SRC} && make
-	cd ${HDBPP_MYSQL_SRC} && install -m644 -oroot -groot lib/* ${TANGO_DIR}/lib/
-	# Compile abstract database interface
-	export TANGO_DIR=${TANGO_DIR} && cd ${HDBPP_MYSQL_SRC}/.libhdbpp && make
-	cd ${HDBPP_MYSQL_SRC}/.libhdbpp && install -m644 -oroot -groot lib/* ${TANGO_DIR}/lib/
+	# switch to release tag
+	cd libhdbpp-mysql && git checkout ${HDBPP_MYSQL_TAG}
+	# compile libhdbpp-mysql	
+	export LIBHDBPP_INC=${TANGO_DIR}/include && \
+           export TANGO_INC=${TANGO_DIR}/include/tango && \
+           make -C libhdbpp-mysql 
 
-	# Create SQL database
 
-	# Create database and userfor HDB++
+	# install library
+	install -m644 -oroot -groot libhdbpp-mysql/lib/* ${TANGO_DIR}/lib/
+
+
+	# Create SQL databases
+
+	# Create database and user for HDB++
 	./create_hdb++_db_user.sh
 	# Create tables
-	for sqlfile in ${HDBPP_MYSQL_SRC}/etc/*.sql ; do cat $$sqlfile | mysql hdbpp ; done
+
+	# execute SQL scripts: 'root' is expected to be able to connect to mysql without password
+	cat libhdbpp-mysql/etc/*.sql | mysql -uroot hdbpp
 	@echo
 
 	# Compile HDB++ Configuration Manager
-	export TANGO_DIR=${TANGO_DIR} && cd ${HDBPP_CM_SRC} && make && install -m755 -oroot -groot bin/* ${TANGO_DIR}/bin/
+	# switch to release tag
+	cd hdbpp-cm && git checkout ${HDBPP_CM_TAG}
+	export TANGO_DIR=${TANGO_DIR} && \
+          export TANGO_INC=${TANGO_DIR}/include/tango && \
+          export TANGO_LIB=${TANGO_DIR}/lib && \
+          export LIBHDBPP_INC=${TANGO_DIR}/include && \
+          make -C hdbpp-cm
+	install -m755 -oroot -groot hdbpp-cm/bin/* ${TANGO_DIR}/bin/
+
+
 	# Compile HDB++ Event Subscriber
-	export TANGO_DIR=${TANGO_DIR} && cd ${HDBPP_ES_SRC} && make && install -m755 -oroot -groot bin/* ${TANGO_DIR}/bin/
+	# switch to release tag
+	cd hdbpp-es && git checkout ${HDBPP_ES_TAG}
+	export TANGO_DIR=${TANGO_DIR} && \
+          export TANGO_INC=${TANGO_DIR}/include/tango && \
+          export TANGO_LIB=${TANGO_DIR}/lib && \
+          export LIBHDBPP_INC=${TANGO_DIR}/include && \
+          make -C hdbpp-es
+	install -m755 -oroot -groot hdbpp-es/bin/* ${TANGO_DIR}/bin/
 	@echo
 
-#       Compilation of hdbpp-configurator does not work yet, so download .jar instead
-#	# Compile HDB++ Configurator GUI with maven
-#	cd ${HDBPP_CONF_GUI_SRC} && mvn compile
 
-#       hdbpp-configurator-2.2.jar from http://www.tango-controls.org/community/project-docs/hdbplusplus/hdbplusplus-doc/configuration-gui/
-#       does not work yet
-#       use jhdbcpp-2.2.jar from TangoVM instead
-#       ftp://ftp.esrf.fr/pub/cs/tango/tango92-vm_RC1.zip
-#	# Install HDB++ Configurator GUI JAR file
-#	install -m644 -oroot -groot ${HDBPP_CONF_JAR} ${TANGO_DIR}/share/java/${HDBPP_CONF_JAR}
-	# Install HDB++ Configurator launcher script
-	install -m644 -oroot -groot jhdbcpp-2.2.jar ${TANGO_DIR}/share/java/
-	cd ${TANGO_DIR}/share/java/ && ln -sf jhdbcpp-2.2.jar jhdbcpp.jar
-	install -m755 -oroot -groot jhdbcpp.sh ${TANGO_DIR}/bin
-	@echo
+	# Compilation of hdbpp-configurator
+	# switch to release tag
+	cd hdbpp-configurator && git checkout ${HDBPP_CONFIGURATOR_TAG}
+	# Compile HDB++ Configurator GUI with maven
+	cd hdbpp-configurator && mvn package
+	install -m644 -oroot -groot hdbpp-configurator/target/hdbpp-configurator*.jar \
+            ${TANGO_DIR}/share/java/hdbpp-configurator.jar
+	install -m755 -oroot -groot hdb-configurator.sh ${TANGO_DIR}/bin
+
 
 	# Compile HDB Viewer
-	cd ${HDBPP_VIEWER_SRC} && mvn install
-	install -m644 -oroot -groot ${HDBPP_VIEWER_SRC}/target/jhdbviewer*.jar ${TANGO_DIR}/share/java/jhdbviewer.jar
-
+	# switch to release tag
+	cd hdbpp-viewer && git checkout ${HDBPP_VIEWER_TAG}
+	cd hdbpp-viewer && mvn package
+	install -m644 -oroot -groot hdbpp-viewer/target/jhdbviewer*.jar ${TANGO_DIR}/share/java/jhdbviewer.jar
 
 	# Start tango server to use tango_admin later
 	${TANGO_DIR}/bin/tango start
@@ -184,19 +191,15 @@ install_hdbpp: get_sources
 
 
 
-install_tango: get_sources
-	# install prerequesites to compile Tango
-	apt-get -yq install g++ libcos4-dev libmariadb-dev libmariadbclient-dev-compat libomniorb4-dev libzmq3-dev omniidl omniorb openjdk-8-jdk mariadb-server zlib1g-dev
+install_tango: 
+#	Git repository for Tango does not compile. Download .tar.gz from ftp.esrf.fr instead
+	[ -e ${TANGO_VERSION}.tar.gz ] || wget -q ftp://ftp.esrf.eu/pub/cs/tango/${TANGO_VERSION}.tar.gz -O ${TANGO_VERSION}.tar.gz
 	@echo
-
-	# start mariadbserver, 'root' can login with 'mysql' without password
-	systemctl enable mariadb
-	systemctl start mariadb
 
 	# extract the archive
 	tar xf ${TANGO_VERSION}.tar.gz
 
-	# Create Tango Makfile
+	# Create Tango Makefile
 	cd ${TANGO_VERSION} && ./configure --prefix=${TANGO_DIR} --enable-mariadb
 
 	# Compile Tango
