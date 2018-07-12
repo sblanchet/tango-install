@@ -16,3 +16,6 @@
 [submodule "libhdbpp"]
 	path = libhdbpp
 	url = https://github.com/tango-controls-hdbpp/libhdbpp.git
+[submodule "libhdbpp-extraction-java"]
+	path = libhdbpp-extraction-java
+	url = https://github.com/tango-controls-hdbpp/libhdbpp-extraction-java

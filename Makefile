@@ -28,7 +28,10 @@ HDBPP_ES_TAG:=tags/v1.0.1
 # Release tag for HDB++ Configurator
 HDBPP_CONFIGURATOR_TAG:=tags/hdbpp-configurator-3.5
 
-# Release tag for HDB++ Viewer (
+# Release tag for Java HDB++ Extraction Library
+HDBPP_EXTRACTION_JAVA_TAG:=tags/libhdbpp-java-1.21
+
+# Release tag for HDB++ Viewer
 HDBPP_VIEWER_TAG:=70d61cc38d0e844b196fecdb92db65fdf22f222f
 
 
@@ -156,9 +159,20 @@ install_hdbpp: get_sources  install_libhdbpp
 	cd hdbpp-configurator && git checkout ${HDBPP_CONFIGURATOR_TAG}
 	# Compile HDB++ Configurator GUI with maven
 	cd hdbpp-configurator && mvn package
-	install -m644 -oroot -groot hdbpp-configurator/target/hdbpp-configurator*.jar \
+	install -m644 -oroot -groot \
+            hdbpp-configurator/target/hdbpp-configurator*.jar \
             ${TANGO_DIR}/share/java/hdbpp-configurator.jar
 	install -m755 -oroot -groot hdb-configurator.sh ${TANGO_DIR}/bin
+
+
+	# Compile Java HDB++ Extraction Library
+	# switch to release tag
+	cd libhdbpp-extraction-java && git checkout ${HDBPP_EXTRACTION_JAVA_TAG}
+	# Compile Java HDB++ Extraction Library with maven
+	cd libhdbpp-extraction-java && mvn package
+	install -m644 -oroot -groot \
+            libhdbpp-extraction-java/target/libhdbpp-java*.jar \
+            ${TANGO_DIR}/share/java/libhdbpp-java.jar
 
 
 	# Compile HDB Viewer
