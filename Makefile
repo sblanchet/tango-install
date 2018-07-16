@@ -43,6 +43,8 @@ HDBPP_VIEWER_TAG:=70d61cc38d0e844b196fecdb92db65fdf22f222f
 
 PATH:=/sbin:/usr/sbin:/usr/bin:/bin:${TANGO_DIR}/bin
 
+TANGO_JAVA:=${TANGO_DIR}/share/java
+
 # default target
 default: help
 
@@ -70,6 +72,8 @@ install_prereq:
             libcos4-dev libomniorb4-dev libzmq3-dev omniidl omniorb openjdk-8-jdk \
             zlib1g-dev \
             maven      \
+# install dependencies for hdbpp-viewer
+	apt-get -yq install libjcalendar-java jython
 
 	@echo
 
@@ -159,9 +163,10 @@ install_hdbpp: get_sources  install_libhdbpp
 	cd hdbpp-configurator && git checkout ${HDBPP_CONFIGURATOR_TAG}
 	# Compile HDB++ Configurator GUI with maven
 	cd hdbpp-configurator && mvn package
+	install -m755 -oroot -groot -d ${TANGO_JAVA}
 	install -m644 -oroot -groot \
             hdbpp-configurator/target/hdbpp-configurator*.jar \
-            ${TANGO_DIR}/share/java/hdbpp-configurator.jar
+            ${TANGO_JAVA}/hdbpp-configurator.jar
 	install -m755 -oroot -groot hdb-configurator.sh ${TANGO_DIR}/bin
 
 
@@ -172,14 +177,20 @@ install_hdbpp: get_sources  install_libhdbpp
 	cd libhdbpp-extraction-java && mvn package
 	install -m644 -oroot -groot \
             libhdbpp-extraction-java/target/libhdbpp-java*.jar \
-            ${TANGO_DIR}/share/java/libhdbpp-java.jar
+            ${TANGO_JAVA}/libhdbpp-java.jar
 
 
 	# Compile HDB Viewer
 	# switch to release tag
 	cd hdbpp-viewer && git checkout ${HDBPP_VIEWER_TAG}
 	cd hdbpp-viewer && mvn package
-	install -m644 -oroot -groot hdbpp-viewer/target/jhdbviewer*.jar ${TANGO_DIR}/share/java/jhdbviewer.jar
+	install -m644 -oroot -groot hdbpp-viewer/target/jhdbviewer*.jar ${TANGO_JAVA}/jhdbviewer.jar
+	install -m755 -oroot -groot hdb-viewer.sh ${TANGO_DIR}/bin
+
+	# Link libraries for HDB Viewer
+	ln -sf /usr/share/java/jcalendar.jar ${TANGO_JAVA}/jcalendar.jar
+	ln -sf /usr/share/java/jython.jar ${TANGO_JAVA}/jython.jar
+
 
 	# Start tango server to use tango_admin later
 	${TANGO_DIR}/bin/tango start
