@@ -12,13 +12,12 @@ The project goals are:
 
 - a fresh installation of a supported operating system
     - Debian 9
-    - Ubuntu 17
 - GNU make
 - root privileges
 
 ## Download
 
-Download or clone the project into a Debian 9 or Ubuntu 17 virtual machine.
+Download or clone the project into a Debian 9  virtual machine.
 
 > Note: it is very important to use `--recursive` otherwise the submodules are not downloaded.
 
