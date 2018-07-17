@@ -207,12 +207,12 @@ install_hdbpp: get_sources  install_libhdbpp
 	# use 127.0.0.1 to force IPv4 version of localhost,
 	# because hdb++cm-srv dislikes resolving IPv6 address "::1"
 	TANGO_HOST=${TANGO_HOST}  tango_admin --add-property archiving/hdb++/confmanager.01 ArchiverList tango://${TANGO_HOST}/archiving/hdb++/eventsubscriber.01
-	TANGO_HOST=${TANGO_HOST}  tango_admin --add-property archiving/hdb++/confmanager.01 LibConfiguration "host=localhost,user=hdbpp,password=hdbpppassword,dbname=hdbpp,port=3306,libname=libhdb++mysql.so"
+	TANGO_HOST=${TANGO_HOST}  tango_admin --add-property archiving/hdb++/confmanager.01 LibConfiguration "host=127.0.0.1,user=hdbpp,password=hdbpppassword,dbname=hdbpp,port=3306,libname=libhdb++mysql.so"
 	@echo
 
 	# Declare TANGO device server: hdb++cm-srv and its properties
 	TANGO_HOST=${TANGO_HOST}  tango_admin --add-server hdb++es-srv/01 HdbEventSubscriber archiving/hdb++/eventsubscriber.01
-	TANGO_HOST=${TANGO_HOST}  tango_admin --add-property archiving/hdb++/eventsubscriber.01 LibConfiguration "host=localhost,user=hdbpp,password=hdbpppassword,dbname=hdbpp,port=3306,libname=libhdb++mysql.so"
+	TANGO_HOST=${TANGO_HOST}  tango_admin --add-property archiving/hdb++/eventsubscriber.01 LibConfiguration "host=127.0.0.1,user=hdbpp,password=hdbpppassword,dbname=hdbpp,port=3306,libname=libhdb++mysql.so"
 	@echo
 
 	# List TANGO device servers
