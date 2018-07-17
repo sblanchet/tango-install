@@ -115,10 +115,10 @@ install_hdbpp: get_sources  install_libhdbpp
 	# Compile HDB++ MySQL backend
 	# switch to release tag
 	cd libhdbpp-mysql && git checkout ${HDBPP_MYSQL_TAG}
-	# compile libhdbpp-mysql	
+	# compile libhdbpp-mysql
 	export LIBHDBPP_INC=${TANGO_DIR}/include && \
            export TANGO_INC=${TANGO_DIR}/include/tango && \
-           make -C libhdbpp-mysql 
+           make -C libhdbpp-mysql
 
 
 	# install library
@@ -216,7 +216,7 @@ install_hdbpp: get_sources  install_libhdbpp
 
 
 
-install_tango: 
+install_tango: install_prereq
 #	Git repository for Tango does not compile. Download .tar.gz from ftp.esrf.fr instead
 	[ -e ${TANGO_VERSION}.tar.gz ] || wget -q ftp://ftp.esrf.eu/pub/cs/tango/${TANGO_VERSION}.tar.gz -O ${TANGO_VERSION}.tar.gz
 	@echo
