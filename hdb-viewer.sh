@@ -14,7 +14,7 @@ done
 export CLASSPATH
 echo CLASSPATH $CLASSPATH
 
-export TANGO_HOST=127.0.0.1:10000
+export TANGO_HOST=localhost:10000
 export HDB_TYPE=mysql
 export HDB_MYSQL_HOST=localhost
 export HDB_USER=hdbpp

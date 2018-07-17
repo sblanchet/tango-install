@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export TANGO_DIR=/opt/tango
-export TANGO_HOST=127.0.0.1:10000
+export TANGO_HOST=localhost:10000
 export LD_LIBRARY_PATH=/opt/tango/lib
 PATH=${TANGO_DIR}/bin:/sbin:/usr/sbin:/usr/bin:/bin
 
