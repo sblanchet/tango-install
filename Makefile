@@ -16,8 +16,11 @@ TANGO_HOST:=127.0.0.1:10000
 
 TANGO_SRC_URL:=ftp://ftp.esrf.eu/pub/cs/tango/${TANGO_VERSION}.tar.gz
 
+# Release tag for libhdbpp
+LIB_HDBPP_TAG:=tags/v1.0.0
+
 # Release tag for HDB++ mysql backend
-HDBPP_MYSQL_TAG:=tags/v1.1.0
+LIB_HDBPP_MYSQL_TAG:=tags/v1.1.0
 
 # Release tag for HDB++ Configuration Manager
 HDBPP_CM_TAG:=tags/v1.0.0
@@ -29,7 +32,7 @@ HDBPP_ES_TAG:=tags/v1.0.1
 HDBPP_CONFIGURATOR_TAG:=tags/hdbpp-configurator-3.5
 
 # Release tag for Java HDB++ Extraction Library
-HDBPP_EXTRACTION_JAVA_TAG:=tags/libhdbpp-java-1.21
+LIB_HDBPP_EXTRACTION_JAVA_TAG:=tags/libhdbpp-java-1.21
 
 # Release tag for HDB++ Viewer
 HDBPP_VIEWER_TAG:=70d61cc38d0e844b196fecdb92db65fdf22f222f
@@ -102,6 +105,8 @@ install: install_tango install_itango install_hdbpp
 
 
 install_libhdbpp:
+	# switch to release tag
+	cd libhdbpp && git checkout ${LIB_HDBPP_TAG}
 	mkdir -p libhdbpp/build
 	cd libhdbpp/build && cmake ..                       \
             -DCMAKE_INSTALL_PREFIX=${TANGO_DIR}             \
@@ -114,7 +119,7 @@ install_libhdbpp:
 install_hdbpp: get_sources  install_libhdbpp
 	# Compile HDB++ MySQL backend
 	# switch to release tag
-	cd libhdbpp-mysql && git checkout ${HDBPP_MYSQL_TAG}
+	cd libhdbpp-mysql && git checkout ${LIB_HDBPP_MYSQL_TAG}
 	# compile libhdbpp-mysql
 	export LIBHDBPP_INC=${TANGO_DIR}/include && \
            export TANGO_INC=${TANGO_DIR}/include/tango && \
@@ -172,7 +177,7 @@ install_hdbpp: get_sources  install_libhdbpp
 
 	# Compile Java HDB++ Extraction Library
 	# switch to release tag
-	cd libhdbpp-extraction-java && git checkout ${HDBPP_EXTRACTION_JAVA_TAG}
+	cd libhdbpp-extraction-java && git checkout ${LIB_HDBPP_EXTRACTION_JAVA_TAG}
 	# Compile Java HDB++ Extraction Library with maven
 	cd libhdbpp-extraction-java && mvn package
 	install -m644 -oroot -groot \
