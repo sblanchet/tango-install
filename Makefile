@@ -65,6 +65,10 @@ default: help
 
 
 install_prereq:
+# disable IPv6 version of localhost
+# remove line ::1 localhost in /etc/hosts, because it creates trouble
+	sed -i -e 's/^::1 /#::1 /' /etc/hosts
+
 # install debian prerequesites
 	apt-get -q update
 	apt-get -yq install git wget cmake make g++
