@@ -12,7 +12,7 @@
 TANGO_VERSION:=tango-9.2.5a
 # installation directory
 TANGO_DIR:=/opt/tango
-TANGO_HOST:=localhost:10000
+TANGO_HOST:=localhost.localdomain:10000
 
 TANGO_SRC_URL:=ftp://ftp.esrf.eu/pub/cs/tango/${TANGO_VERSION}.tar.gz
 
@@ -65,9 +65,11 @@ default: help
 
 
 install_prereq:
+# Fix /etc/hosts
 # disable IPv6 version of localhost
-# remove line ::1 localhost in /etc/hosts, because it creates trouble
 	sed -i -e 's/^::1 /#::1 /' /etc/hosts
+	sed -i -e 's/^127\.0\.0\.1.*//' /etc/hosts
+	echo "127.0.0.1 localhost.localdomain localhost" >> /etc/hosts
 
 # install debian prerequesites
 	apt-get -q update

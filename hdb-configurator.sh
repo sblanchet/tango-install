@@ -14,7 +14,7 @@ done
 export CLASSPATH
 echo CLASSPATH $CLASSPATH
 
-export TANGO_HOST=localhost:10000
+export TANGO_HOST=localhost.localdomain:10000
 export HdbManager=archiving/hdb++/confmanager.01
 
 java org.tango.hdb_configurator.configurator.HdbConfigurator $@
